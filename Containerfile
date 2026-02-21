@@ -41,7 +41,7 @@ RUN git config --global advice.detachedHead false \
 # │ Application User                                         │
 # └──────────────────────────────────────────────────────────┘
 # Rename base container user (debian) to nyx
-ARG USER=openclaw
+ARG USER=cheliped
 RUN /usr/sbin/usermod -l $USER debian \
  && /usr/sbin/usermod -d /home/$USER -m $USER \
  && /usr/sbin/groupmod -n $USER debian \
