@@ -2,12 +2,12 @@
 # │ Nyx Calder - OpenClaw AI Assistant Container            │
 # ╰──────────────────────────────────────────────────────────╯
 
-ARG IMAGE_VERSION=13.3
+ARG CONTAINER_VERSION=13.3
 
 # ══════════════════════════════════════════════════════════════
 # Stage 1: Build OpenClaw from source
 # ══════════════════════════════════════════════════════════════
-FROM docker.io/gautada/debian:${IMAGE_VERSION} AS container
+FROM docker.io/gautada/debian:${CONTAINER_VERSION} AS container
 
 # ┌──────────────────────────────────────────────────────────┐
 # │ Metadata                                                 │
@@ -31,7 +31,7 @@ RUN apt-get update && \
 WORKDIR /opt/openclaw
 
 # Clone OpenClaw
-ARG OPENCLAW_VERSION=v2026.02.19
+ARG OPENCLAW_VERSION=main
 RUN git config --global advice.detachedHead false \
  && git clone --depth 1 --branch ${OPENCLAW_VERSION} \
          https://github.com/openclaw/openclaw.git . \
@@ -73,6 +73,8 @@ COPY version.sh /usr/bin/container-version
 RUN mkdir -p /etc/services.d/openclaw
 COPY openclaw-run.sh /etc/services.d/openclaw/run
 # RUN chmod +x /etc/services.d/openclaw/run
+
+COPY openclaw.json /home/$USER/.openclaw/openclaw.json
 
 # Permissions
 RUN chown -R $USER:$USER /home/$USER
