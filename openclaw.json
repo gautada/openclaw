@@ -1,0 +1,74 @@
+{
+  "auth": {
+    "profiles": {
+      "anthropic:default": {
+        "provider": "anthropic",
+        "mode": "api_key"
+      }
+    }
+  },
+  "agents": {
+    "defaults": {
+      "model": {
+        "primary": "anthropic/claude-sonnet-4-6"
+      },
+      "workspace": "/home/cheliped/.openclaw/workspace",
+      "contextPruning": {
+        "mode": "cache-ttl",
+        "ttl": "1h"
+      },
+      "compaction": {
+        "mode": "safeguard"
+      },
+      "heartbeat": {
+        "every": "30m"
+      },
+      "maxConcurrent": 4,
+      "subagents": {
+        "maxConcurrent": 8
+      }
+    }
+  },
+  "messages": {
+    "ackReactionScope": "group-mentions"
+  },
+  "commands": {
+    "native": "auto",
+    "nativeSkills": "auto",
+    "restart": true
+  },
+  "gateway": {
+    "port": 8080,
+    "mode": "local",
+    "bind": "lan",
+  "auth": {
+      "mode": "token"
+    },
+    "trustedProxies": ["10.0.0.0/8"],
+    "controlUi": {
+          "dangerouslyDisableDeviceAuth": true,
+          "allowInsecureAuth": true
+    },
+    "tls": {
+      "terminatedUpstream": true
+    },
+    "tailscale": {
+      "mode": "off",
+      "resetOnExit": false
+    },
+    "nodes": {
+      "denyCommands": [
+        "camera.snap",
+        "camera.clip",
+        "screen.record",
+        "calendar.add",
+        "contacts.add",
+        "reminders.add"
+      ]
+    }
+  },
+  "meta": {
+    "lastTouchedVersion": "2026.01.01",
+    "lastTouchedAt": "2026-01-01T00:00:00.1Z"
+  }
+}
