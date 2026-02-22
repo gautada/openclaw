@@ -26,6 +26,28 @@ RUN apt-get update && \
     --no-install-recommends ca-certificates curl git unzip \
  && curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
  && apt-get install -y --no-install-recommends nodejs \
+ && apt-get install -y --no-install-recommends \
+    chromium \
+    fonts-liberation \
+    fontconfig \
+    libasound2t64 \
+    libatk-bridge2.0-0t64 \
+    libatspi2.0-0t64 \
+    libcairo2 \
+    libdbus-1-3 \
+    libdrm2 \
+    libgbm1 \
+    libglib2.0-0t64 \
+    libgtk-3-0t64 \
+    libnspr4 \
+    libnss3 \
+    libpango-1.0-0 \
+    libxcomposite1 \
+    libxdamage1 \
+    libxfixes3 \
+    libxkbcommon0 \
+    libxrandr2 \
+    libxss1 \
  && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /opt/openclaw
