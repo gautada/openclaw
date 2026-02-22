@@ -34,4 +34,6 @@ cd /opt/openclaw || echo "Unknown application directory"
 #   --bind lan \
 #   --port 8080
 
-exec s6-setuidgid "${USER}" pnpm openclaw gateway run
+# exec s6-setuidgid "${USER}" pnpm openclaw gateway run
+
+exec su ${USER} -c "pnpm openclaw gateway run"
