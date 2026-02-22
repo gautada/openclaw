@@ -36,4 +36,4 @@ cd /opt/openclaw || echo "Unknown application directory"
 
 # exec s6-setuidgid "${USER}" pnpm openclaw gateway run
 
-exec su ${USER} -c "pnpm openclaw gateway run"
+exec su "${USER}" -c "pnpm openclaw gateway run"
