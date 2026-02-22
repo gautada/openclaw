@@ -27,9 +27,11 @@ export OPENCLAW_HOME
 # Change to application directory
 cd /opt/openclaw || echo "Unknown application directory"
 
-exec tail -f /dev/null
+# exec tail -f /dev/null
 # Start OpenClaw gateway as user nyx (uid 1001)
 # exec s6-setuidgid "${USER}" node openclaw.mjs gateway \
 #   --allow-unconfigured \
 #   --bind lan \
 #   --port 8080
+
+exec s6-setuidgid "${USER}" pnpm openclaw gateway run
