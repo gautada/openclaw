@@ -23,7 +23,7 @@ LABEL org.opencontainers.image.documentation="https://github.com/gautada/opencla
 # └──────────────────────────────────────────────────────────┘
 RUN apt-get update && \
     DEBIAN_FRONTEND=noninteractive apt-get install -y \
-    --no-install-recommends ca-certificates curl git unzip \
+    --no-install-recommends ca-certificates curl git jq unzip \
  && curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
  && apt-get install -y --no-install-recommends nodejs \
  && apt-get install -y --no-install-recommends \
@@ -88,8 +88,14 @@ USER root
 COPY openclaw-running.sh /etc/container/health.d/openclaw-running
 # RUN chmod +x /etc/container/health.d/openclaw-running
 
+COPY appversion-check.sh /etc/container/health.d/appversion-check
+RUN chmod +x /etc/container/health.d/appversion-check
+
 COPY version.sh /usr/bin/container-version
 # RUN chmod +x /usr/bin/container-version
+
+COPY latest.sh /usr/bin/container-latest
+RUN chmod +x /usr/bin/container-latest
 
 # s6 service definition
 RUN mkdir -p /etc/services.d/openclaw
