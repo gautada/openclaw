@@ -95,7 +95,7 @@ COPY version.sh /usr/bin/container-version
 # RUN chmod +x /usr/bin/container-version
 
 COPY latest.sh /usr/bin/container-latest
-RUN chmod +x /usr/bin/container-latest
+# RUN chmod +x /usr/bin/container-latest
 
 # s6 service definition
 RUN mkdir -p /etc/services.d/openclaw
