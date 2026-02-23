@@ -55,7 +55,7 @@ WORKDIR /opt/openclaw
 # Clone OpenClaw
 ARG OPENCLAW_VERSION=main
 RUN git config --global advice.detachedHead false \
- && git clone --depth 1 --branch ${OPENCLAW_VERSION} \
+ && git clone --depth 1 --branch "v${OPENCLAW_VERSION}" \
          https://github.com/openclaw/openclaw.git . \
  && corepack enable 
 
