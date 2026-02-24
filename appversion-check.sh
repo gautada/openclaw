@@ -1,8 +1,10 @@
 #!/bin/sh
 #
-# Health check: verifies the running OpenClaw version matches the latest
-# release on GitHub. Calls /usr/bin/container-version for the running version
-# and /usr/bin/container-latest for the latest release.
+# Health check: verifies the running OpenClaw version is consistent with the
+# latest release on GitHub. Calls /usr/bin/container-version for the running
+# version and /usr/bin/container-latest for the latest release tag.
+# Passes if the running version STARTS WITH the latest release version,
+# allowing for build-patch suffixes (e.g. 2026.2.22-2 passes for 2026.2.22).
 # Returns 0 if versions match, non-zero otherwise.
 
 # Get the version of the running OpenClaw instance
@@ -22,10 +24,16 @@ fi
 echo "Current version: $CURRENT_VERSION"
 echo "Latest version:  $LATEST_VERSION"
 
-if [ "$CURRENT_VERSION" = "$LATEST_VERSION" ]; then
-  echo "Version check passed"
-  exit 0
-else
-  echo "Version check failed: versions do not match"
-  exit 1
-fi
+# Pass if CURRENT_VERSION starts with LATEST_VERSION.
+# Uses POSIX case pattern to handle build-patch suffixes (e.g. 2026.2.22-2
+# starts with 2026.2.22). No subprocesses or external tools required.
+case "$CURRENT_VERSION" in
+  "${LATEST_VERSION}"*)
+    echo "Version check passed"
+    exit 0
+    ;;
+  *)
+    echo "Version check failed: $CURRENT_VERSION does not start with $LATEST_VERSION"
+    exit 1
+    ;;
+esac
