@@ -16,6 +16,8 @@ HTTP_CODE=$(curl -s \
   --retry 12 \
   --retry-delay 5 \
   --retry-all-errors \
+  --trace-time \
+  --trace "$STDERR_FILE" \
   -o "$RESPONSE_FILE" \
   -w '%{http_code}' \
   "$HEALTH_URL" 2>"$STDERR_FILE")
