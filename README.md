@@ -38,7 +38,7 @@ The container ships a built-in health check:
 
 Standard health endpoints are available via symlinks from `gautada/debian`:
 
-```
+```text
 /usr/bin/container-liveness   # liveness probe
 /usr/bin/container-readiness  # readiness probe
 /usr/bin/container-startup    # startup probe
@@ -72,11 +72,11 @@ environment.
 
 ## User Configuration
 
-| Setting  | Value        |
-| -------- | ------------ |
-| Username | `cheliped`   |
-| UID      | `1001`       |
-| Shell    | `/bin/zsh`   |
+| Setting  | Value            |
+| -------- | ---------------- |
+| Username | `cheliped`       |
+| UID      | `1001`           |
+| Shell    | `/bin/zsh`       |
 | Home     | `/home/cheliped` |
 
 > The user is named after the large crusher claw of a lobster — the *cheliped*
@@ -117,11 +117,11 @@ podman build --build-arg OPENCLAW_VERSION=2026.2.22 -t openclaw .
 
 ### Build Arguments
 
-| Argument             | Default  | Description                          |
-| -------------------- | -------- | ------------------------------------ |
-| `CONTAINER_VERSION`  | `13.3`   | Debian base image version            |
-| `OPENCLAW_VERSION`   | `main`   | OpenClaw release version to build    |
-| `USER`               | `cheliped` | Container user name                |
+| Argument             | Default    | Description                       |
+| -------------------- | ---------- | --------------------------------- |
+| `CONTAINER_VERSION`  | `13.3`     | Debian base image version         |
+| `OPENCLAW_VERSION`   | `main`     | OpenClaw release version to build |
+| `USER`               | `cheliped` | Container user name               |
 
 ## Run
 
@@ -145,7 +145,7 @@ podman exec -it --user cheliped openclaw /bin/zsh
 
 ## Project Structure
 
-```
+```text
 .
 ├── .args                    # Build arguments
 ├── .gitignore               # Git ignore rules
