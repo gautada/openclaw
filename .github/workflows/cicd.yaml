@@ -14,22 +14,91 @@ name: "Continuous Integration: Build and Publish Multi-Architecture Image"
 jobs:
   check:
     uses: gautada/cicd/.github/workflows/ci-linter.yaml@main
+
+  resolve:
+    name: "Resolve OPENCLAW_VERSION"
+    needs: check
+    runs-on: ubuntu-latest
+    outputs:
+      openclaw_version: ${{ steps.resolve.outputs.version }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Resolve version via latest.sh
+        id: resolve
+        run: |
+          VERSION=$(./latest.sh)
+          if [ -z "$VERSION" ]; then
+            echo "ERROR: latest.sh returned an empty version string" >&2
+            exit 1
+          fi
+          echo "Building OpenClaw v${VERSION}"
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+
   build-arm64:
-    needs: check
-    uses: gautada/cicd/.github/workflows/ci-podman-build.yaml@main
-    with:
-      architecture: "arm64"
-    secrets:
-      REGISTRY_USERNAME: ${{ secrets.DOCKERIO_REGISTRY }}
-      REGISTRY_TOKEN: ${{ secrets.DOCKERIO_TOKEN }}
+    name: "Build & Push Image (arm64)"
+    needs: [check, resolve]
+    runs-on: ubuntu-24.04-arm
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Install Tools
+        run: |
+          sudo /usr/bin/apt-get update
+          sudo /usr/bin/apt-get install --yes podman
+      - name: Registry Login
+        run: |
+          echo "${{ secrets.DOCKERIO_TOKEN }}" | /usr/bin/podman login \
+            --username "${{ secrets.DOCKERIO_REGISTRY }}" \
+            --password-stdin docker.io
+      - name: Build & Push Image
+        run: |
+          IMG="docker.io/${{ secrets.DOCKERIO_REGISTRY }}"
+          IMG+="/$(pwd | awk -F'/' '{print $NF}')"
+          IMG+=":build-arm64-$(/usr/bin/git rev-parse --short HEAD)"
+          echo "Building OpenClaw v${{ needs.resolve.outputs.openclaw_version }}"
+          touch .args
+          /usr/bin/podman build \
+            --arch arm64 \
+            --build-arg-file .args \
+            --build-arg "OPENCLAW_VERSION=${{ needs.resolve.outputs.openclaw_version }}" \
+            --file Containerfile \
+            --no-cache \
+            --tag "${IMG}" .
+          /usr/bin/podman push "${IMG}"
+
   build-amd64:
-    needs: check
-    uses: gautada/cicd/.github/workflows/ci-podman-build.yaml@main
-    with:
-      architecture: "amd64"
-    secrets:
-      REGISTRY_USERNAME: ${{ secrets.DOCKERIO_REGISTRY }}
-      REGISTRY_TOKEN: ${{ secrets.DOCKERIO_TOKEN }}
+    name: "Build & Push Image (amd64)"
+    needs: [check, resolve]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Install Tools
+        run: |
+          sudo /usr/bin/apt-get update
+          sudo /usr/bin/apt-get install --yes podman
+      - name: Registry Login
+        run: |
+          echo "${{ secrets.DOCKERIO_TOKEN }}" | /usr/bin/podman login \
+            --username "${{ secrets.DOCKERIO_REGISTRY }}" \
+            --password-stdin docker.io
+      - name: Build & Push Image
+        run: |
+          IMG="docker.io/${{ secrets.DOCKERIO_REGISTRY }}"
+          IMG+="/$(pwd | awk -F'/' '{print $NF}')"
+          IMG+=":build-amd64-$(/usr/bin/git rev-parse --short HEAD)"
+          echo "Building OpenClaw v${{ needs.resolve.outputs.openclaw_version }}"
+          touch .args
+          /usr/bin/podman build \
+            --arch amd64 \
+            --build-arg-file .args \
+            --build-arg "OPENCLAW_VERSION=${{ needs.resolve.outputs.openclaw_version }}" \
+            --file Containerfile \
+            --no-cache \
+            --tag "${IMG}" .
+          /usr/bin/podman push "${IMG}"
+
   publish:
     needs: [build-arm64, build-amd64]
     uses: gautada/cicd/.github/workflows/ci-podman-publish.yaml@main
