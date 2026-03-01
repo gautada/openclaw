@@ -1,4 +1,4 @@
-# OpenClaw Container FF
+# OpenClaw Container
 
 A container image packaging the [OpenClaw](https://github.com/openclaw/openclaw)
 autonomous agent platform, built on [`gautada/debian`](https://github.com/gautada/debian).
