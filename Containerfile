@@ -52,13 +52,18 @@ RUN apt-get update && \
 
 WORKDIR /opt/openclaw
 
-# Clone OpenClaw
-ARG OPENCLAW_VERSION=main
-ARG OPENCLAW_BRANCH=v$OPENCLAW_VERSION
-RUN git config --global advice.detachedHead false \
- && git clone --depth 1 --branch $OPENCLAW_BRANCH \
+# Clone OpenClaw — version resolved dynamically from GitHub releases API
+RUN OPENCLAW_VERSION=$(curl -sL "https://api.github.com/repos/openclaw/openclaw/releases/latest" \
+    | jq -r '.tag_name' \
+    | sed 's/^v//' \
+    | tr -d '[:space:]') \
+ && { [ -n "$OPENCLAW_VERSION" ] && [ "$OPENCLAW_VERSION" != "null" ] \
+      || { echo "ERROR: failed to resolve latest OpenClaw version from GitHub API" >&2; exit 1; }; } \
+ && echo "Building with OpenClaw ${OPENCLAW_VERSION}" \
+ && git config --global advice.detachedHead false \
+ && git clone --depth 1 --branch "v${OPENCLAW_VERSION}" \
          https://github.com/openclaw/openclaw.git . \
- && corepack enable 
+ && corepack enable
 
 # ┌──────────────────────────────────────────────────────────┐
 # │ Application User                                         │
