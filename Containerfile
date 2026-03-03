@@ -2,7 +2,7 @@
 # │ Nyx Calder - OpenClaw AI Assistant Container            │
 # ╰──────────────────────────────────────────────────────────╯
 
-ARG CONTAINER_VERSION=13.3
+ARG CONTAINER_VERSION=latest
 
 # ══════════════════════════════════════════════════════════════
 # Stage 1: Build OpenClaw from source
