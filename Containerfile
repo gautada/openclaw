@@ -7,7 +7,46 @@ ARG CONTAINER_VERSION=latest
 # ══════════════════════════════════════════════════════════════
 # Stage 1: Build OpenClaw from source
 # ══════════════════════════════════════════════════════════════
-FROM docker.io/gautada/debian:${CONTAINER_VERSION} AS container
+FROM docker.io/gautada/debian:${CONTAINER_VERSION} AS builder
+
+# ┌──────────────────────────────────────────────────────────┐
+# │ Build Dependencies                                       │
+# └──────────────────────────────────────────────────────────┘
+RUN apt-get update && \
+    DEBIAN_FRONTEND=noninteractive apt-get install -y \
+    --no-install-recommends ca-certificates curl git jq unzip \
+ && curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
+ && apt-get install -y --no-install-recommends nodejs \
+ && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /opt/openclaw-src
+
+# Copy version script to resolve latest version
+COPY latest.sh /usr/bin/container-latest
+RUN chmod +x /usr/bin/container-latest
+
+# Clone OpenClaw
+RUN OPENCLAW_VERSION=$(/usr/bin/container-latest) \
+ && { [ -n "$OPENCLAW_VERSION" ] && [ "$OPENCLAW_VERSION" != "null" ] \
+      || { echo "ERROR: failed to resolve latest OpenClaw version from GitHub API" >&2; exit 1; }; } \
+ && echo "Building with OpenClaw ${OPENCLAW_VERSION}" \
+ && git config --global advice.detachedHead false \
+ && git clone --depth 1 --branch "v${OPENCLAW_VERSION}" \
+         https://github.com/openclaw/openclaw.git . \
+ && corepack enable
+
+# Build application
+RUN pnpm install --frozen-lockfile \
+ && pnpm build \
+ && pnpm ui:build
+
+# Extract production deployment
+RUN pnpm deploy --filter=openclaw --prod /opt/openclaw-deploy
+
+# ══════════════════════════════════════════════════════════════
+# Stage 2: Runtime Environment
+# ══════════════════════════════════════════════════════════════
+FROM docker.io/gautada/debian:${CONTAINER_VERSION} AS runtime
 
 # ┌──────────────────────────────────────────────────────────┐
 # │ Metadata                                                 │
@@ -50,67 +89,45 @@ RUN apt-get update && \
     libxss1 \
  && rm -rf /var/lib/apt/lists/*
 
-WORKDIR /opt/openclaw
-
-COPY latest.sh /usr/bin/container-latest
-# Clone OpenClaw — version resolved dynamically from GitHub releases API
-# RUN OPENCLAW_VERSION=$(curl -sL "https://api.github.com/repos/openclaw/openclaw/releases/latest" \
-#     | jq -r '.tag_name' \
-#     | sed 's/^v//' \
-#     | tr -d '[:space:]') \
-RUN OPENCLAW_VERSION=$(/usr/bin/container-latest) \
- && { [ -n "$OPENCLAW_VERSION" ] && [ "$OPENCLAW_VERSION" != "null" ] \
-      || { echo "ERROR: failed to resolve latest OpenClaw version from GitHub API" >&2; exit 1; }; } \
- && echo "Building with OpenClaw ${OPENCLAW_VERSION}" \
- && git config --global advice.detachedHead false \
- && git clone --depth 1 --branch "v${OPENCLAW_VERSION}" \
-         https://github.com/openclaw/openclaw.git . \
- && corepack enable
-
 # ┌──────────────────────────────────────────────────────────┐
 # │ Application User                                         │
 # └──────────────────────────────────────────────────────────┘
-# Rename base container user (debian) to nyx
 ARG USER=cheliped
 RUN /usr/sbin/usermod -l $USER debian \
  && /usr/sbin/usermod -d /home/$USER -m $USER \
  && /usr/sbin/groupmod -n $USER debian \
  && /bin/echo "$USER:$USER" | /usr/sbin/chpasswd \
- && rm -rf /home/debian \
- && chown -R $USER:$USER /opt/openclaw
-
-# OpenClaw workspace directory
-ENV OPENCLAW_HOME=/home/$USER
-USER $USER
-RUN pnpm install --frozen-lockfile \     
- && pnpm build \
- && pnpm ui:build
+ && rm -rf /home/debian
 
 # ┌──────────────────────────────────────────────────────────┐
-# │ Service Configuration                                    │
+# │ Application Installation                                 │
 # └──────────────────────────────────────────────────────────┘
-USER root
-# COPY entrypoint.sh /usr/bin/container-entrypoint
-# RUN chmod +x /usr/bin/container-entrypoint
+WORKDIR /opt/openclaw
+COPY --from=builder /opt/openclaw-deploy /opt/openclaw
+RUN chown -R $USER:$USER /opt/openclaw
 
+# ┌──────────────────────────────────────────────────────────┐
+# │ Scripts and Configuration                                │
+# └──────────────────────────────────────────────────────────┘
 COPY openclaw-running.sh /etc/container/health.d/openclaw-running
-# RUN chmod +x /etc/container/health.d/openclaw-running
-
 COPY appversion-check.sh /etc/container/health.d/appversion-check
-RUN chmod +x /etc/container/health.d/appversion-check
-
 COPY version.sh /usr/bin/container-version
-# RUN chmod +x /usr/bin/container-version
+COPY latest.sh /usr/bin/container-latest
 
-# COPY latest.sh /usr/bin/container-latest
-# RUN chmod +x /usr/bin/container-latest
+RUN chmod +x /etc/container/health.d/openclaw-running \
+             /etc/container/health.d/appversion-check \
+             /usr/bin/container-version \
+             /usr/bin/container-latest
 
 # s6 service definition
 RUN mkdir -p /etc/services.d/openclaw
 COPY openclaw-run.sh /etc/services.d/openclaw/run
-# RUN chmod +x /etc/services.d/openclaw/run
+RUN chmod +x /etc/services.d/openclaw/run
 
+# Initial configuration
 COPY openclaw.json /home/$USER/.openclaw/openclaw.json
-
-# Permissions
 RUN chown -R $USER:$USER /home/$USER
+
+# Environment
+ENV OPENCLAW_HOME=/home/$USER
+USER $USER
