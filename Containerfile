@@ -117,16 +117,14 @@ COPY latest.sh /usr/bin/container-latest
 RUN chmod +x /etc/container/health.d/openclaw-running \
              /etc/container/health.d/appversion-check \
              /usr/bin/container-version \
-             /usr/bin/container-latest
+             /usr/bin/container-latest \
+ && mkdir -p /etc/services.d/openclaw
 
 # s6 service definition
-RUN mkdir -p /etc/services.d/openclaw
 COPY openclaw-run.sh /etc/services.d/openclaw/run
-RUN chmod +x /etc/services.d/openclaw/run
-
-# Initial configuration
 COPY openclaw.json /home/$USER/.openclaw/openclaw.json
-RUN chown -R $USER:$USER /home/$USER
+RUN chmod +x /etc/services.d/openclaw/run \
+ && chown -R $USER:$USER /home/$USER
 
 # Environment
 ENV OPENCLAW_HOME=/home/$USER
