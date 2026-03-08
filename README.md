@@ -172,3 +172,36 @@ podman exec -it --user cheliped openclaw /bin/zsh
 - [Docker Hub](https://hub.docker.com/r/gautada/openclaw)
 - [GitHub](https://github.com/gautada/openclaw)
 - [Docs](https://docs.openclaw.ai)
+
+## Production Deployment
+
+The container uses a multi-stage build:
+
+- Stage 1 (builder): clones OpenClaw, installs all dependencies, builds the
+  application, then prunes to production-only dependencies.
+- Stage 2 (runtime): copies only the compiled artifacts into a clean runtime
+  image with no build tools.
+
+### Environment Variables
+
+| Variable | Default | Description |
+| --- | --- | --- |
+| `NODE_ENV` | `production` | Node.js environment mode |
+| `OPENCLAW_HOME` | `/home/cheliped` | OpenClaw home directory |
+
+### Configuration
+
+Mount a custom `openclaw.json` at `/home/cheliped/.openclaw/openclaw.json`
+via a Kubernetes ConfigMap to override the default configuration:
+
+```yaml
+volumeMounts:
+  - name: openclaw-config
+    mountPath: /home/cheliped/.openclaw/openclaw.json
+    subPath: openclaw.json
+```
+
+### Data Persistence
+
+Mount a persistent volume at `/mnt/volumes/data` for workspace and agent
+data that should survive container restarts.
