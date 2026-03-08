@@ -104,7 +104,8 @@ RUN /usr/sbin/usermod -l $USER debian \
 # └──────────────────────────────────────────────────────────┘
 WORKDIR /opt/openclaw
 COPY --from=builder /opt/openclaw-deploy /opt/openclaw
-RUN chown -R $USER:$USER /opt/openclaw
+RUN chown -R $USER:$USER /opt/openclaw \
+ && mkdir -p /etc/services.d/openclaw
 
 # ┌──────────────────────────────────────────────────────────┐
 # │ Scripts and Configuration                                │
@@ -113,16 +114,13 @@ COPY openclaw-running.sh /etc/container/health.d/openclaw-running
 COPY appversion-check.sh /etc/container/health.d/appversion-check
 COPY version.sh /usr/bin/container-version
 COPY latest.sh /usr/bin/container-latest
+COPY openclaw-run.sh /etc/services.d/openclaw/run
 
 RUN chmod +x /etc/container/health.d/openclaw-running \
              /etc/container/health.d/appversion-check \
              /usr/bin/container-version \
-             /usr/bin/container-latest
-
-# s6 service definition
-RUN mkdir -p /etc/services.d/openclaw
-COPY openclaw-run.sh /etc/services.d/openclaw/run
-RUN chmod +x /etc/services.d/openclaw/run
+             /usr/bin/container-latest \
+             /etc/services.d/openclaw/run
 
 # Initial configuration
 COPY openclaw.json /home/$USER/.openclaw/openclaw.json
