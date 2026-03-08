@@ -21,6 +21,8 @@ RUN chmod +x /usr/bin/container-latest
 
 WORKDIR /build
 
+ENV CI=true
+
 # Clone OpenClaw at the latest release tag and build
 RUN OPENCLAW_VERSION=$(/usr/bin/container-latest) \
  && { [ -n "$OPENCLAW_VERSION" ] && [ "$OPENCLAW_VERSION" != "null" ] \
