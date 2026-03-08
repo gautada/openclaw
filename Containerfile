@@ -41,7 +41,7 @@ RUN pnpm install --frozen-lockfile \
  && pnpm ui:build
 
 # Extract production deployment
-RUN pnpm deploy --filter=openclaw --prod /opt/openclaw-deploy
+RUN pnpm deploy --legacy --filter=openclaw --prod /opt/openclaw-deploy
 
 # ══════════════════════════════════════════════════════════════
 # Stage 2: Runtime Environment
@@ -104,8 +104,7 @@ RUN /usr/sbin/usermod -l $USER debian \
 # └──────────────────────────────────────────────────────────┘
 WORKDIR /opt/openclaw
 COPY --from=builder /opt/openclaw-deploy /opt/openclaw
-RUN chown -R $USER:$USER /opt/openclaw \
- && mkdir -p /etc/services.d/openclaw
+RUN chown -R $USER:$USER /opt/openclaw
 
 # ┌──────────────────────────────────────────────────────────┐
 # │ Scripts and Configuration                                │
@@ -114,17 +113,20 @@ COPY openclaw-running.sh /etc/container/health.d/openclaw-running
 COPY appversion-check.sh /etc/container/health.d/appversion-check
 COPY version.sh /usr/bin/container-version
 COPY latest.sh /usr/bin/container-latest
-COPY openclaw-run.sh /etc/services.d/openclaw/run
 
 RUN chmod +x /etc/container/health.d/openclaw-running \
              /etc/container/health.d/appversion-check \
              /usr/bin/container-version \
              /usr/bin/container-latest \
-             /etc/services.d/openclaw/run
+ && mkdir -p /etc/services.d/openclaw
 
-# Initial configuration
+# s6 service definition
+COPY openclaw-run.sh /etc/services.d/openclaw/run
 COPY openclaw.json /home/$USER/.openclaw/openclaw.json
-RUN chown -R $USER:$USER /home/$USER
+
+# Final Permissions & Config
+RUN chmod +x /etc/services.d/openclaw/run \
+ && chown -R $USER:$USER /home/$USER
 
 # Environment
 ENV OPENCLAW_HOME=/home/$USER
