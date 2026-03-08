@@ -123,6 +123,8 @@ RUN chmod +x /etc/container/health.d/openclaw-running \
 # s6 service definition
 COPY openclaw-run.sh /etc/services.d/openclaw/run
 COPY openclaw.json /home/$USER/.openclaw/openclaw.json
+
+# Final Permissions & Config
 RUN chmod +x /etc/services.d/openclaw/run \
  && chown -R $USER:$USER /home/$USER
 
