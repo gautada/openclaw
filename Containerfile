@@ -92,6 +92,15 @@ ENV OPENCLAW_HOME=/home/$USER
 ENV NODE_ENV=production
 
 # ╭──────────────────────────────────────────────────────────╮
+# │ Service                                                  │
+# ╰──────────────────────────────────────────────────────────╯
+RUN mkdir -p /etc/services.d/openclaw
+COPY openclaw-run.sh /etc/services.d/openclaw/run
+# Default openclaw.json (overridable via volume mount)
+COPY openclaw.json /home/$USER/.openclaw/openclaw.json
+RUN chmod +x /etc/services.d/openclaw/run  && chown -R $USER:$USER /home/$USER
+
+# ╭──────────────────────────────────────────────────────────╮
 # │ Container Scripts                                        │
 # ╰──────────────────────────────────────────────────────────╯
 COPY version.sh           /usr/bin/container-version
@@ -104,14 +113,7 @@ RUN chmod +x \
     /etc/container/health.d/appversion-check \
     /etc/container/health.d/openclaw-running
 
-# ╭──────────────────────────────────────────────────────────╮
-# │ Service                                                  │
-# ╰──────────────────────────────────────────────────────────╯
-RUN mkdir -p /etc/services.d/openclaw
-COPY openclaw-run.sh /etc/services.d/openclaw/run
-# Default openclaw.json (overridable via volume mount)
-COPY openclaw.json /home/$USER/.openclaw/openclaw.json
-RUN chmod +x /etc/services.d/openclaw/run  && chown -R $USER:$USER /home/$USER
+
 
 USER $USER
 
