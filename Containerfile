@@ -41,7 +41,7 @@ RUN pnpm install --frozen-lockfile \
  && pnpm ui:build
 
 # Extract production deployment
-RUN pnpm deploy --filter=openclaw --prod /opt/openclaw-deploy
+RUN pnpm deploy --legacy --filter=openclaw --prod /opt/openclaw-deploy
 
 # ══════════════════════════════════════════════════════════════
 # Stage 2: Runtime Environment
