@@ -117,7 +117,6 @@ RUN chmod +x \
 
 
 
-USER $USER
 
 VOLUME /mnt/volumes/data
 VOLUME /mnt/volumes/configuration
