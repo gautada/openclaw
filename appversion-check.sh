@@ -24,16 +24,17 @@ fi
 echo "Current version: $CURRENT_VERSION"
 echo "Latest version:  $LATEST_VERSION"
 
-# Pass if CURRENT_VERSION starts with LATEST_VERSION.
-# Uses POSIX case pattern to handle build-patch suffixes (e.g. 2026.2.22-2
-# starts with 2026.2.22). No subprocesses or external tools required.
+# Pass if CURRENT_VERSION contains LATEST_VERSION anywhere in the string.
+# The runtime now reports versions like "OpenClaw2026.3.8(3caab92)" so we
+# match on substring instead of prefix to accommodate the leading product
+# name and trailing commit signature.
 case "$CURRENT_VERSION" in
-  "${LATEST_VERSION}"*)
+  *"${LATEST_VERSION}"*)
     echo "Version check passed"
     exit 0
     ;;
   *)
-    echo "Version check failed: $CURRENT_VERSION does not start with $LATEST_VERSION"
+    echo "Version check failed: $CURRENT_VERSION does not contain $LATEST_VERSION"
     exit 1
     ;;
 esac
