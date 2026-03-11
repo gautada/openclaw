@@ -2,14 +2,14 @@
 # ╭──────────────────────────────────────────────────────────╮
 # │ Nyx Calder Version Reporter                              │
 # ╰──────────────────────────────────────────────────────────╯
-
+set -eux
 cd /opt/openclaw || {
   echo "unknown"
   exit 0
 }
 
 RAW_VERSION=$(node openclaw.mjs --version 2>/dev/null)
-
+echo "RAW==$RAW_VERSION"
 # Extract the release stamp (YYYY.M.D style) and normalize to YYYY.MM.DD.
 # Tolerates arbitrary separators and strips ANSI color codes if present.
 NORMALIZED=$(printf '%s\n' "$RAW_VERSION" | awk '
@@ -27,3 +27,4 @@ if [ -n "$NORMALIZED" ]; then
 else
   echo "unknown"
 fi
+set +eux
