@@ -2,7 +2,7 @@
 #
 # Health check: verifies the running OpenClaw version matches the
 # latest release on GitHub. Both values are expected to be normalized to
-# YYYY-MM-DD (see /usr/bin/container-version and /usr/bin/container-latest).
+# YYYY.MM.DD (see /usr/bin/container-version and /usr/bin/container-latest).
 
 normalize() {
   printf '%s' "$1" | tr -d '[:space:]'
