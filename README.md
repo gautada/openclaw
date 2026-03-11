@@ -48,21 +48,22 @@ Standard health endpoints are available via symlinks from `gautada/debian`:
 ### Application Version
 
 The `version.sh` script returns the running OpenClaw version via
-`/usr/bin/container-version`. Used by CI/CD to verify the built image
-matches the intended release.
+`/usr/bin/container-version`. The output is normalized to `YYYY-MM-DD`
+so CI/CD and health checks can compare it directly to the latest release
+tag.
 
 ### Latest Version Check
 
-The `latest.sh` script (`/usr/bin/container-latest`) queries the GitHub API
-to retrieve the latest published release version of OpenClaw. Used by
-`appversion-check.sh` to detect version drift.
+The `latest.sh` script (`/usr/bin/container-latest`) queries the GitHub API,
+normalizes the release tag to `YYYY-MM-DD`, and feeds that value to the
+health checks.
 
 ### Application Version Check
 
 `appversion-check.sh` is installed at `/etc/container/health.d/appversion-check`.
-It compares the running container version (`container-version`) against the
-latest published release (`container-latest`) and fails the health check if
-they diverge.
+It compares the normalized running version (`container-version`) to the
+normalized latest release (`container-latest`) and fails the health check
+if they diverge.
 
 ### Browser Support
 
