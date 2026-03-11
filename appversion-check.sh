@@ -6,6 +6,7 @@
 # Passes if the running version STARTS WITH the latest release version,
 # allowing for build-patch suffixes (e.g. 2026.2.22-2 passes for 2026.2.22).
 # Returns 0 if versions match, non-zero otherwise.
+set -eux
 
 # Get the version of the running OpenClaw instance
 CURRENT_VERSION=$(/usr/bin/container-version | tr -d '[:space:]')
