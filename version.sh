@@ -2,31 +2,23 @@
 # ╭──────────────────────────────────────────────────────────╮
 # │ Nyx Calder Version Reporter                              │
 # ╰──────────────────────────────────────────────────────────╯
-# set -eux
+
+# Get RAW_VERSION from the app
 cd /opt/openclaw || {
   echo "unknown"
   exit 0
 }
 
-RAW_VERSION=$(node openclaw.mjs --version 2>/dev/null)
-echo "$RAW_VERSION" | grep -oE '[0-9]{4}\.[0-9]{1,2}\.[0-9]{1,2}'
+# Capture version and strip any ANSI codes
+# The runtime reports versions like "OpenClaw2026.3.8(3caab92)"
+RAW_VERSION=$(node openclaw.mjs --version 2>/dev/null | sed 's/\x1B\[[0-9;]*[mK]//g')
 
-# echo "RAW==$RAW_VERSION"
-# # Extract the release stamp (YYYY.M.D style) and normalize to YYYY.MM.DD.
-# # Tolerates arbitrary separators and strips ANSI color codes if present.
-# NORMALIZED=$(printf '%s\n' "$RAW_VERSION" | awk '
-#  {
-#     gsub(/\033\[[0-9;]*[A-Za-z]/, "")
-#     if (match($0, /([0-9]{4})[^0-9]*([0-9]{1,2})[^0-9]*([0-9]{1,2})/, m)) {
-#       printf "%04d.%d.%d\n", m[1], m[2], m[3]
-#       exit
-#     }
-#   }
-# ')
+# Extract version string matching YYYY.M.D or YYYY.MM.DD
+# e.g. "OpenClaw2026.3.8(3caab92)" -> "2026.3.8"
+VERSION=$(echo "$RAW_VERSION" | grep -oE '[0-9]{4}\.[0-9]{1,2}\.[0-9]{1,2}' | head -n1)
 
-# if [ -n "$NORMALIZED" ]; then
-#   printf '%s\n' "$NORMALIZED"
-# else
-#   echo "unknown"
-# fi
-# set +eux
+if [ -n "$VERSION" ]; then
+  echo "$VERSION"
+else
+  echo "unknown"
+fi
