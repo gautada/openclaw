@@ -28,3 +28,13 @@ manifest/
 .commit
 
 .env
+.flake8
+.hadolint.yaml
+.htmlhintrc
+.jscpd.json
+.markdownlint.yaml
+.pre-commit-config.yaml
+.sqlfluff
+.yamllint.yaml
+
+

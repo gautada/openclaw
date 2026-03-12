@@ -1,22 +1,21 @@
 #!/bin/sh
 #
-# Health check: verifies the running OpenClaw version is consistent with the
-# latest release on GitHub. Calls /usr/bin/container-version for the running
-# version and /usr/bin/container-latest for the latest release tag.
-# Passes if the running version STARTS WITH the latest release version,
-# allowing for build-patch suffixes (e.g. 2026.2.22-2 passes for 2026.2.22).
-# Returns 0 if versions match, non-zero otherwise.
+# Health check: verifies the running OpenClaw version matches the
+# latest release on GitHub. Both values are expected to be normalized to
+# YYYY.MM.DD (see /usr/bin/container-version and /usr/bin/container-latest).
 
-# Get the version of the running OpenClaw instance
-CURRENT_VERSION=$(/usr/bin/container-version | tr -d '[:space:]')
-if [ -z "$CURRENT_VERSION" ]; then
+normalize() {
+  printf '%s' "$1" | tr -d '[:space:]'
+}
+
+CURRENT_VERSION=$(normalize "$(/usr/bin/container-version 2>/dev/null)")
+if [ -z "$CURRENT_VERSION" ] || [ "$CURRENT_VERSION" = "unknown" ]; then
   echo "Failed to get running app version from /usr/bin/container-version"
   exit 1
 fi
 
-# Get the latest release version from GitHub
-LATEST_VERSION=$(/usr/bin/container-latest)
-if [ -z "$LATEST_VERSION" ]; then
+LATEST_VERSION=$(normalize "$(/usr/bin/container-latest 2>/dev/null)")
+if [ -z "$LATEST_VERSION" ] || [ "$LATEST_VERSION" = "unknown" ]; then
   echo "Failed to get latest release version from /usr/bin/container-latest"
   exit 1
 fi
