@@ -23,10 +23,17 @@ fi
 echo "Current version: $CURRENT_VERSION"
 echo "Latest version:  $LATEST_VERSION"
 
-if [ "$CURRENT_VERSION" = "$LATEST_VERSION" ]; then
-  echo "Version check passed"
-  exit 0
-fi
-
-echo "Version check failed: $CURRENT_VERSION does not match $LATEST_VERSION"
-exit 1
+# Pass if CURRENT_VERSION contains LATEST_VERSION anywhere in the string.
+# The runtime now reports versions like "OpenClaw2026.3.8(3caab92)" so we
+# match on substring instead of prefix to accommodate the leading product
+# name and trailing commit signature.
+case "$CURRENT_VERSION" in
+  *"${LATEST_VERSION}"*)
+    echo "Version check passed"
+    exit 0
+    ;;
+  *)
+    echo "Version check failed: $CURRENT_VERSION does not contain $LATEST_VERSION"
+    exit 1
+    ;;
+esac
