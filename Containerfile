@@ -3,40 +3,40 @@ ARG CONTAINER_VERSION=latest
 # ══════════════════════════════════════════════════════════════
 # Stage 1: Build
 # ══════════════════════════════════════════════════════════════
-# FROM docker.io/gautada/debian:${CONTAINER_VERSION} AS builder
-#
-# # ╭──────────────────────────────────────────────────────────╮
-# # │ Build Dependencies                                       │
-# # ╰──────────────────────────────────────────────────────────╯
-# RUN apt-get update \
-#  && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
-#     ca-certificates curl git jq unzip \
-#  && curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
-#  && apt-get install -y --no-install-recommends nodejs \
-#  && apt-get clean \
-#  && rm -rf /var/lib/apt/lists/*
-#
-# COPY latest.sh /usr/bin/container-latest
-# RUN chmod +x /usr/bin/container-latest
-#
-# WORKDIR /build
-#
-# ENV CI=true
-#
-# # Clone OpenClaw at the latest release tag and build
-# RUN OPENCLAW_VERSION=$(/usr/bin/container-latest) \
-#  && { [ -n "$OPENCLAW_VERSION" ] && [ "$OPENCLAW_VERSION" != "null" ] \
-#       || { echo "ERROR: failed to resolve latest OpenClaw version" >&2; exit 1; }; } \
-#  && echo "Building OpenClaw ${OPENCLAW_VERSION}" \
-#  && git config --global advice.detachedHead false \
-#  && git clone --depth 1 --branch "v${OPENCLAW_VERSION}" \
-#          https://github.com/openclaw/openclaw.git . \
-#  && corepack enable \
-#  && pnpm install --frozen-lockfile \
-#  && pnpm build \
-#  && pnpm ui:build \
-#  && pnpm prune --prod
-#
+FROM docker.io/gautada/debian:${CONTAINER_VERSION} AS builder
+
+# ╭──────────────────────────────────────────────────────────╮
+# │ Build Dependencies                                       │
+# ╰──────────────────────────────────────────────────────────╯
+RUN apt-get update \
+ && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+    ca-certificates curl git jq unzip \
+ && curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
+ && apt-get install -y --no-install-recommends nodejs \
+ && apt-get clean \
+ && rm -rf /var/lib/apt/lists/*
+
+COPY latest.sh /usr/bin/container-latest
+RUN chmod +x /usr/bin/container-latest
+
+WORKDIR /build
+
+ENV CI=true
+
+# Clone OpenClaw at the latest release tag and build
+RUN OPENCLAW_VERSION=$(/usr/bin/container-latest) \
+ && { [ -n "$OPENCLAW_VERSION" ] && [ "$OPENCLAW_VERSION" != "null" ] \
+      || { echo "ERROR: failed to resolve latest OpenClaw version" >&2; exit 1; }; } \
+ && echo "Building OpenClaw ${OPENCLAW_VERSION}" \
+ && git config --global advice.detachedHead false \
+ && git clone --depth 1 --branch "v${OPENCLAW_VERSION}" \
+         https://github.com/openclaw/openclaw.git . \
+ && corepack enable \
+ && pnpm install --frozen-lockfile \
+ && pnpm build \
+ && pnpm ui:build \
+ && pnpm prune --prod
+
 # ══════════════════════════════════════════════════════════════
 # Stage 2: Runtime
 # ══════════════════════════════════════════════════════════════
@@ -55,30 +55,32 @@ LABEL org.opencontainers.image.documentation="https://github.com/gautada/opencla
 # │ Runtime Dependencies                                     │
 # ╰──────────────────────────────────────────────────────────╯
 # Node.js and Chromium only — no build tools in the runtime stage
-# RUN apt-get update \
-#  && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
-#     ca-certificates curl jq ripgrep \
-#  && curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
-#  && apt-get install -y --no-install-recommends nodejs chromium \
-#     fonts-liberation fontconfig libasound2t64 libatk-bridge2.0-0t64 \
-#     libatspi2.0-0t64 libcairo2 libdbus-1-3 libdrm2 libgbm1 libglib2.0-0t64 \
-#     libgtk-3-0t64 libnspr4 libnss3 libpango-1.0-0 libxcomposite1 \
-#     libxdamage1 libxfixes3 libxkbcommon0 libxrandr2 libxss1 \
-#  && apt-get clean \
-#  && rm -rf /var/lib/apt/lists/*
+RUN apt-get update \
+ && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+    ca-certificates curl jq ripgrep \
+ && curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
+ && apt-get install -y --no-install-recommends nodejs \
+ && apt-get install -y --no-install-recommends chromium \
+    fonts-liberation fontconfig libasound2t64 libatk-bridge2.0-0t64 \
+    libatspi2.0-0t64 libcairo2 libdbus-1-3 libdrm2 libgbm1 libglib2.0-0t64 \
+    libgtk-3-0t64 libnspr4 libnss3 libpango-1.0-0 libxcomposite1 \
+    libxdamage1 libxfixes3 libxkbcommon0 libxrandr2 libxss1 \
+ && apt-get clean \
+ && rm -rf /var/lib/apt/lists/*
 
 # ╭──────────────────────────────────────────────────────────╮
 # │ Application                                              │
 # ╰──────────────────────────────────────────────────────────╯
 WORKDIR /opt/openclaw
-RUN curl -fsSL https://openclaw.ai/install.sh | bash
+# RUN curl -fsSL https://openclaw.ai/install.sh | bash
 # Copy production artifacts only from the builder stage
-# COPY --from=builder /build/dist         ./dist
-# COPY --from=builder /build/node_modules ./node_modules
-# COPY --from=builder /build/openclaw.mjs ./openclaw.mjs
-# COPY --from=builder /build/package.json ./package.json
-# COPY --from=builder /build/packages     ./packages
-# COPY --from=builder /build/docs         ./docs
+COPY --from=builder /build/dist         ./dist
+COPY --from=builder /build/node_modules ./node_modules
+COPY --from=builder /build/openclaw.mjs ./openclaw.mjs
+COPY --from=builder /build/package.json ./package.json
+COPY --from=builder /build/packages     ./packages
+COPY --from=builder /build/docs         ./docs
+
 
 # ╭──────────────────────────────────────────────────────────╮
 # │ User                                                     │
@@ -116,7 +118,6 @@ RUN chmod +x \
     /usr/bin/container-latest \
     /etc/container/health.d/appversion-check \
     /etc/container/health.d/openclaw-running
-
 
 VOLUME /mnt/volumes/data
 VOLUME /mnt/volumes/configuration
