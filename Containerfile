@@ -82,6 +82,8 @@ COPY --from=builder /build/package.json ./package.json
 COPY --from=builder /build/packages     ./packages
 COPY --from=builder /build/docs         ./docs
 
+ENV OPENCLAW_BUNDLED_PLUGINS_DIR=/opt/openclaw/extensions
+
 
 # ╭──────────────────────────────────────────────────────────╮
 # │ User                                                     │
