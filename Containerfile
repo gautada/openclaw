@@ -76,6 +76,7 @@ WORKDIR /opt/openclaw
 # Copy production artifacts only from the builder stage
 COPY --from=builder /build/dist         ./dist
 COPY --from=builder /build/extensions   ./extensions
+COPY --from=builder /build/skills       ./skills
 COPY --from=builder /build/node_modules ./node_modules
 COPY --from=builder /build/openclaw.mjs ./openclaw.mjs
 COPY --from=builder /build/package.json ./package.json
