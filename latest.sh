@@ -15,4 +15,8 @@ if [ -z "$LATEST" ] || [ "$LATEST" = "null" ]; then
   exit 1
 fi
 
+if [ "$1" = "--minimum" ]; then
+  LATEST=$(echo "$LATEST" | sed 's/-.*//')
+fi
+
 printf '%s\n' "$LATEST"

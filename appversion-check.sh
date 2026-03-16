@@ -14,7 +14,7 @@ if [ -z "$CURRENT_VERSION" ] || [ "$CURRENT_VERSION" = "unknown" ]; then
   exit 1
 fi
 
-LATEST_VERSION=$(normalize "$(/usr/bin/container-latest 2>/dev/null)")
+LATEST_VERSION=$(normalize "$(/usr/bin/container-latest --minimum 2>/dev/null)")
 if [ -z "$LATEST_VERSION" ] || [ "$LATEST_VERSION" = "unknown" ]; then
   echo "Failed to get latest release version from /usr/bin/container-latest"
   exit 1
