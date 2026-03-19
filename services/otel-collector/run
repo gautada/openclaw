@@ -1,0 +1,5 @@
+#!/bin/sh
+# s6 run script for otel-collector
+# Listens for OTLP on 4317/4318 and exposes Prometheus metrics on 8889
+
+exec /usr/bin/otel-collector-contrib --config /opt/openclaw/otel-collector.yaml

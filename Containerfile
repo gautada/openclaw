@@ -54,7 +54,7 @@ LABEL org.opencontainers.image.documentation="https://github.com/gautada/opencla
 # ╭──────────────────────────────────────────────────────────╮
 # │ Runtime Dependencies                                     │
 # ╰──────────────────────────────────────────────────────────╯
-# Node.js and Chromium only — no build tools in the runtime stage
+# Node.js, Chromium, and Otel-Collector — no build tools in the runtime stage
 RUN apt-get update \
  && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
     ca-certificates curl jq \
@@ -64,6 +64,8 @@ RUN apt-get update \
     libatspi2.0-0t64 libcairo2 libdbus-1-3 libdrm2 libgbm1 libglib2.0-0t64 \
     libgtk-3-0t64 libnspr4 libnss3 libpango-1.0-0 libxcomposite1 \
     libxdamage1 libxfixes3 libxkbcommon0 libxrandr2 libxss1 \
+ && curl -L https://github.com/open-telemetry/opentelemetry-collector-releases/releases/download/v0.121.0/otelcol-contrib_0.121.0_linux_arm64.tar.gz | tar xz -C /usr/bin otelcol-contrib \
+ && mv /usr/bin/otelcol-contrib /usr/bin/otel-collector-contrib \
  && apt-get clean \
  && rm -rf /var/lib/apt/lists/*
 
@@ -96,29 +98,13 @@ ENV NODE_ENV=production
 # ╭──────────────────────────────────────────────────────────╮
 # │ Service                                                  │
 # ╰──────────────────────────────────────────────────────────╯
-RUN mkdir -p /etc/services.d/openclaw
+RUN mkdir -p /etc/services.d/openclaw /etc/services.d/otel-collector
 COPY openclaw-run.sh /etc/services.d/openclaw/run
+COPY services/otel-collector/run /etc/services.d/otel-collector/run
+COPY services/otel-collector/otel-collector.yaml /opt/openclaw/otel-collector.yaml
 # Default openclaw.json (overridable via volume mount)
 COPY openclaw.json /home/$USER/.openclaw/openclaw.json
-RUN chmod +x /etc/services.d/openclaw/run  && chown -R $USER:$USER /home/$USER
+RUN chmod +x /etc/services.d/openclaw/run /etc/services.d/otel-collector/run && chown -R $USER:$USER /home/$USER
 
-# ╭──────────────────────────────────────────────────────────╮
-# │ Container Scripts                                        │
-# ╰──────────────────────────────────────────────────────────╯
-COPY version.sh           /usr/bin/container-version
-COPY latest.sh            /usr/bin/container-latest
-COPY appversion-check.sh  /etc/container/health.d/appversion-check
-COPY openclaw-running.sh  /etc/container/health.d/openclaw-running
-RUN chmod +x \
-    /usr/bin/container-version \
-    /usr/bin/container-latest \
-    /etc/container/health.d/appversion-check \
-    /etc/container/health.d/openclaw-running
-
-
-
-
-VOLUME /mnt/volumes/data
-VOLUME /mnt/volumes/configuration
-EXPOSE 8080/tcp
+EXPOSE 8080/tcp 8889/tcp
 WORKDIR /opt/openclaw
